@@ -1,0 +1,13 @@
+{
+  "name": "rota-vital-guia-transporte",
+  "version": "1.0.0",
+  "description": "Funcao HTTP Google Cloud Functions (emulador local) para emissao de guia de transporte do sistema Rota Vital",
+  "main": "index.js",
+  "scripts": {
+    "start": "functions-framework --target=guiaTransporte --port=8085",
+    "test": "node --test test/index.test.js"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.5"
+  }
+}
