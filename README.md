@@ -2,9 +2,25 @@
 
 Função HTTP desenvolvida para receber requisições do sistema **Rota Vital** (no mesmo formato do DTO `RotaResponse`) e emitir a **Guia de Transporte de Hemocomponentes**, executando **exclusivamente em ambiente local** através do emulador oficial do provedor Google (`@google-cloud/functions-framework`).
 
-## Verifique no terminal do seu Computador:
-npm install
-npm start
+### Abrindo a aplicação no navegador
+
+**No Windows (PowerShell ou CMD):**
+
+```powershell
+start http://localhost:8085
+```
+
+**No Linux:**
+
+```bash
+xdg-open http://localhost:8085
+```
+
+**No macOS:**
+
+```bash
+open http://localhost:8085
+```
 
 ## Como executar localmente com o emulador Google
 
