@@ -178,13 +178,136 @@ function formatarGuiaTexto(guia) {
   return linhas.join('\n');
 }
 
+function renderizarPaginaHtml() {
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rota Vital — Guia de Transporte (Google Cloud Functions Local)</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { margin: 0; background: #f8fafc; color: #0f172a; padding: 24px; }
+    .container { max-width: 980px; margin: 0 auto; }
+    header { background: #991b1b; color: #fff; padding: 20px 24px; border-radius: 12px; margin-bottom: 20px; }
+    header h1 { margin: 0 0 6px; font-size: 1.4rem; }
+    header p { margin: 0; opacity: 0.9; font-size: 0.92rem; }
+    .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 999px; font-size: 0.78rem; margin-top: 8px; }
+    .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; }
+    @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    h2 { margin-top: 0; font-size: 1.05rem; color: #1e293b; }
+    textarea { width: 100%; height: 340px; font-family: ui-monospace, Consolas, monospace; font-size: 0.82rem; padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; resize: vertical; }
+    button { background: #b91c1c; color: #fff; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 12px; font-size: 0.92rem; }
+    button:hover { background: #991b1b; }
+    .alerta { padding: 12px 14px; border-radius: 8px; margin: 12px 0; font-size: 0.9rem; }
+    .alerta-warn { background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; }
+    .alerta-ok { background: #dcfce7; border: 1px solid #22c55e; color: #166534; }
+    .meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 0.88rem; background: #f1f5f9; padding: 12px; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85rem; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f8fafc; color: #475569; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Rota Vital — Emissão de Guia de Transporte</h1>
+      <p>Função HTTP executando localmente no emulador Google Cloud Functions</p>
+      <span class="badge">Provedor: @google-cloud/functions-framework · http://localhost:8085/</span>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2>1. Requisição do Rota Vital (JSON)</h2>
+        <textarea id="payload">{
+  "id": "rota-101",
+  "hemocentroOrigemId": "HC01",
+  "hospitalDestinoId": "HO04",
+  "status": "PLANEJADA",
+  "tempoEstimadoMinutos": 23.5,
+  "caminho": ["HC01", "HO04"],
+  "bolsas": [
+    {
+      "id": "BOL00001",
+      "tipoHemocomponente": "CONCENTRADO_HEMACIAS",
+      "grupoSanguineo": "O-",
+      "volumeMl": 450,
+      "dataValidade": "2026-12-15"
+    },
+    {
+      "id": "BOL00002",
+      "tipoHemocomponente": "CONCENTRADO_PLAQUETAS",
+      "grupoSanguineo": "A+",
+      "volumeMl": 280,
+      "dataValidade": "2026-11-28"
+    }
+  ]
+}</textarea>
+        <button onclick="emitirGuia()">Emitir Guia de Transporte</button>
+      </div>
+
+      <div class="card">
+        <h2>2. Guia de Transporte Gerada</h2>
+        <div id="resultado">
+          <p style="color:#64748b;font-size:0.9rem;">Clique em <strong>Emitir Guia de Transporte</strong> para enviar o POST ao emulador.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function emitirGuia() {
+      const box = document.getElementById('resultado');
+      try {
+        const body = JSON.parse(document.getElementById('payload').value);
+        const resp = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          box.innerHTML = '<div class="alerta alerta-warn">' + (data.erro || 'Erro na requisicao') + '</div>';
+          return;
+        }
+        const classeAlerta = data.cadeiaFria.requerSeparacaoTermica ? 'alerta-warn' : 'alerta-ok';
+        box.innerHTML =
+          '<div class="meta">' +
+            '<div><strong>Guia:</strong> ' + data.numeroGuia + '</div>' +
+            '<div><strong>Provedor:</strong> ' + data.provedor.nome + ' (' + data.provedor.modoExecucao + ')</div>' +
+            '<div><strong>Rota:</strong> ' + data.rota.caminho.join(' &rarr; ') + '</div>' +
+            '<div><strong>Carga:</strong> ' + data.resumoCarga.totalBolsas + ' bolsas (' + data.resumoCarga.volumeTotalMl + ' mL)</div>' +
+          '</div>' +
+          '<div class="alerta ' + classeAlerta + '"><strong>Cadeia Fria:</strong> ' + data.cadeiaFria.alerta + '</div>' +
+          '<table><thead><tr><th>Bolsa</th><th>Componente</th><th>Grupo</th><th>Faixa</th></tr></thead><tbody>' +
+            data.itens.map(i =>
+              '<tr><td>' + i.bolsaId + '</td><td>' + i.descricaoComponente + '</td><td>' + i.grupoSanguineo + '</td><td>' + i.faixaTemperaturaCelsius.min + '°C a ' + i.faixaTemperaturaCelsius.max + '°C</td></tr>'
+            ).join('') +
+          '</tbody></table>' +
+          '<details style="margin-top:12px;"><summary style="cursor:pointer;font-size:0.85rem;color:#475569;">Ver JSON completo</summary><pre>' + JSON.stringify(data, null, 2) + '</pre></details>';
+      } catch (e) {
+        box.innerHTML = '<div class="alerta alerta-warn">JSON invalido: ' + e.message + '</div>';
+      }
+    }
+    emitirGuia();
+  </script>
+</body>
+</html>`;
+}
+
 function guiaTransporteHandler(req, res) {
   res.set('Access-Control-Allow-Origin', '*');
-  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
     return res.status(204).send('');
+  }
+
+  if (req.method === 'GET') {
+    return res.status(200).type('text/html; charset=utf-8').send(renderizarPaginaHtml());
   }
 
   if (req.method !== 'POST') {

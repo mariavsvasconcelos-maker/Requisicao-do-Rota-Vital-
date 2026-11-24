@@ -99,9 +99,17 @@ describe('Funcao HTTP guiaTransporte (Google Cloud Functions - Emulador Local)',
     assert.match(res.body, /Plasma Fresco Congelado/);
   });
 
-  it('rejeita metodo diferente de POST com 405', () => {
+  it('retorna pagina HTML interativa no navegador em GET', () => {
     const res = mockRes();
     guiaTransporteHandler({ method: 'GET' }, res);
+    assert.equal(res.statusCode, 200);
+    assert.match(res.contentType, /text\/html/);
+    assert.match(res.body, /Rota Vital/);
+  });
+
+  it('rejeita metodo PUT com 405', () => {
+    const res = mockRes();
+    guiaTransporteHandler({ method: 'PUT' }, res);
     assert.equal(res.statusCode, 405);
   });
 

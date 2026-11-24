@@ -19,6 +19,9 @@ npm start
 
 O endpoint ficará disponível em `http://localhost:8085/`.
 
+- **Via navegador (interface web):** acesse `http://localhost:8085/` para testar interativamente e visualizar a guia gerada.
+- **Via API (`POST`):** envie JSON para `http://localhost:8085/` (ou `?formato=texto`).
+
 3. Execute os testes unitários:
 
 ```powershell
